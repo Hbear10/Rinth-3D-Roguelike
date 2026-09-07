@@ -22,7 +22,7 @@ boss_sets = {1:["KingFireSlime","KingIceSlime","KingEarthSlime"],
              3:["KingBot"]}
 
 player_pos = [2.5,10.5]#The coordinate of the player, (xy)
-floor = 4 #Counter to track which floor the player is on
+floor = 0 #Counter to track which floor the player is on
 
 #Use function from maze.py to generate a new maze using a backtracking algorithm
 #Then randomly populate walls and maze
@@ -114,6 +114,29 @@ raycast_column_width = 2 #The width of each pixel column, increase it to improve
 
 pygame.init()
 screen = pygame.display.set_mode((1280,720)) #720p
+
+
+#Music and SFX
+pygame.mixer.init()   #Set up sound  
+
+#Load MP3 files
+sounds = {"BGM" : pygame.mixer.Sound("Assets/BGM.mp3"), "Fail": pygame.mixer.Sound("Assets/Fail.mp3"),
+          "Menu": pygame.mixer.Sound("Assets/Menu.mp3"),"Attack": pygame.mixer.Sound("Assets/Attack.mp3")}
+
+# print(pygame.mixer.music.get_volume())
+pygame.mixer.Channel(0).set_volume(0.5)
+
+pygame.mixer.Channel(0).play(sounds["BGM"], loops = -1)#Start music and loop it infinitely
+# pygame.mixer.Channel(1).play(sounds["Fail"])
+# pygame.mixer.Channel(1).play(sounds["Menu"])
+# pygame.mixer.Channel(1).play(sounds["Attack"])
+
+
+#Channel 0 - Background music
+#Channel 1 - Sound Effects
+
+
+
 
 clock = pygame.time.Clock()#Used later to set FPS cap
 game_font = pygame.font.Font('Evil Empire.otf', 24)#Custom font
@@ -1161,6 +1184,8 @@ def main():
                 if event.type == pygame.QUIT:
                     running = False
                 if event.type == pygame.KEYDOWN:
+                    pygame.mixer.Channel(1).play(sounds["Menu"])        
+
 
                     #move around the menu
                     if event.key == pygame.K_w or event.key == pygame.K_UP:
@@ -1189,7 +1214,11 @@ def main():
                     if playerTurn:
                         if event.key == pygame.K_SPACE:
                             if menu_selected["Battle"] == 0:#attack
+                                pygame.mixer.Channel(1).play(sounds["Attack"])#this also overrides the menu ping sfx
+
                                 battleAnimation("Physical1Player",length=battleAnimTime,x=16,y=32).playerMoveAnim(screen,576,360)
+                                
+
 
                                 deal_damage(player_stats,enemy_obj)
                                 playerTurn = False
@@ -1233,6 +1262,8 @@ def main():
                 if event.type == pygame.QUIT:
                     running = False
                 if event.type == pygame.KEYDOWN:
+                    pygame.mixer.Channel(1).play(sounds["Menu"])        
+
                     if event.key == pygame.K_ESCAPE or event.key == pygame.K_BACKSPACE:
                         game_state.set_value("Battle") #Go back to the main battle menu
 
@@ -1289,13 +1320,15 @@ def main():
                                     energyDamage+=tempDamage
 
                             if move.animID != "None":
+                                pygame.mixer.Channel(1).play(sounds["Attack"])
                                 battleAnimation(f"{move.animID}Player",length=battleAnimTime,x=32,y=16,scale=6).playerMoveAnim(screen,640,360)
 
                             player_stats.hp += move.healValue
                             enemy_obj.hp -= int(energyDamage)
 
                         else: #Insufficient EP
-                            pass#add error noise rahah type noise
+                            pygame.mixer.Channel(1).play(sounds["Fail"])
+
 
             # Battle Checks
             check_over_max_hp()
@@ -1314,6 +1347,8 @@ def main():
                 if event.type == pygame.QUIT:
                     running = False
                 if event.type == pygame.KEYDOWN:
+                    pygame.mixer.Channel(1).play(sounds["Menu"])        
+
                     if event.key == pygame.K_ESCAPE or event.key == pygame.K_BACKSPACE:#Go back
                         game_state.set_value("Battle")
 
@@ -1348,6 +1383,7 @@ def main():
                         if selectedItem.effectType == "Heal":
                             player_stats.hp += selectedItem.potency
                         elif selectedItem.effectType == "Damage":
+                            pygame.mixer.Channel(1).play(sounds["Attack"])
                             battleAnimation("Physical1Player",length=battleAnimTime,x=16,y=32).playerMoveAnim(screen,576,360)
                             enemy_obj.hp -= selectedItem.potency
 
@@ -1376,6 +1412,8 @@ def main():
                 if event.type == pygame.QUIT:
                     running = False
                 if event.type == pygame.KEYDOWN:
+                    pygame.mixer.Channel(1).play(sounds["Menu"])        
+
                     if event.key in (pygame.K_ESCAPE, pygame.K_BACKSPACE, pygame.K_SPACE, pygame.K_RETURN):
                         #Selected Relic
 
@@ -1407,6 +1445,8 @@ def main():
                 if event.type == pygame.QUIT:
                     running = False
                 if event.type == pygame.KEYDOWN:
+                    pygame.mixer.Channel(1).play(sounds["Menu"])        
+
                     if event.key in (pygame.K_ESCAPE, pygame.K_BACKSPACE, pygame.K_SPACE, pygame.K_RETURN):
                         index = menu_selected["MoveUp"]
 
@@ -1475,7 +1515,11 @@ def main():
                 if event.type == pygame.QUIT:
                     running = False      
                 else:#If any input
+                    if event.type == pygame.KEYDOWN:
+                        pygame.mixer.Channel(1).play(sounds["Menu"])        
                     game_state.set_value("Moving")
+                    
+
 
                         
         clock.tick(FPS)  
