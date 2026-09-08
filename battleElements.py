@@ -165,6 +165,7 @@ class relic():
 
 def load_relics():
     relicTempList = []
+    #Relics
     relicTempList.append(relic("Spikey Band","This will make your attacks hurt more","(Increases Physical Strength by 10%)","SpikeyBand","physicalStrength",multVal=1.1))
     relicTempList.append(relic("Heavy Plating","This plating will dull your opponents blows","(Increases Defence by 10%)","HeavyPlating","defence",multVal=1.1))
     relicTempList.append(relic("Speed Syringe","This special serum will make you move quicker","(Increases speed by 10%)","SpeedSyringe","speed",multVal=1.1))
@@ -176,6 +177,20 @@ def load_relics():
 
     return relicTempList
 
+def load_super_relics():
+    relicTempList = []
+
+    #Super Relics
+    relicTempList.append(relic("Omni Shard","Every part of you feels invigorated!","(Increases all stats by 20%)","OmniShard","Omni",multVal=1.2))
+
+    relicTempList.append(relic("Fire Orb","Become one with fire!","(Double fire affinity)","FireOrb","fireAffinity",multVal=2))
+    relicTempList.append(relic("Ice Orb","Become one with ice!","(Double ice affinity)","IceOrb","iceAffinty",multVal=2))
+    relicTempList.append(relic("Earth Orb","Become one with earth!","(Double earth affinity)","EarthOrb","earthAffinty",multVal=2))
+
+    relicTempList.append(relic("Glass Canon","Boom! Bang! Crash!","x3 Speed x3 Attack /3 Defence","GlassCanon","glassCanon",multVal=3))
+
+
+    return relicTempList
 
 def relic_apply_stat_change(playerObject: battle_container,relicObject: relic):
     stat = relicObject.stat
@@ -200,6 +215,26 @@ def relic_apply_stat_change(playerObject: battle_container,relicObject: relic):
     elif stat == "EP":
         playerObject.max_ep = (playerObject.max_ep + relicObject.addVal) * relicObject.multVal
         playerObject.ep = (playerObject.ep + relicObject.addVal) * relicObject.multVal
+    elif stat == "Omni":
+        playerObject.max_hp = int((playerObject.max_hp + relicObject.addVal) * relicObject.multVal)
+        playerObject.hp = int((playerObject.hp + relicObject.addVal) * relicObject.multVal)
+        playerObject.max_ep = int((playerObject.max_ep + relicObject.addVal) * relicObject.multVal)
+        playerObject.ep = int((playerObject.ep + relicObject.addVal) * relicObject.multVal)
+        playerObject.physicalStrength = (playerObject.physicalStrength + relicObject.addVal) * relicObject.multVal
+        playerObject.defence = (playerObject.defence + relicObject.addVal) * relicObject.multVal
+        playerObject.speed = (playerObject.speed + relicObject.addVal) * relicObject.multVal
+        playerObject.fireStrength = (playerObject.fireStrength + relicObject.addVal) * relicObject.multVal
+        playerObject.fireDefence = (playerObject.fireDefence + relicObject.addVal) * relicObject.multVal
+        playerObject.iceStrength = (playerObject.iceStrength + relicObject.addVal) * relicObject.multVal
+        playerObject.iceDefence = (playerObject.iceDefence + relicObject.addVal) * relicObject.multVal
+        playerObject.earthStrength = (playerObject.earthStrength + relicObject.addVal) * relicObject.multVal
+        playerObject.earthDefence = (playerObject.earthDefence + relicObject.addVal) * relicObject.multVal
+    elif stat == "glassCanon":
+        playerObject.speed = playerObject.speed * relicObject.multVal
+        playerObject.attack = playerObject.attack * relicObject.multVal
+        playerObject.defence = playerObject.defence / relicObject.multVal
+
+
     
 
 

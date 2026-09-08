@@ -22,7 +22,7 @@ boss_sets = {1:["KingFireSlime","KingIceSlime","KingEarthSlime"],
              3:["KingBot"]}
 
 player_pos = [2.5,10.5]#The coordinate of the player, (xy)
-floor = 0 #Counter to track which floor the player is on
+floor = 1 #Counter to track which floor the player is on
 
 #Use function from maze.py to generate a new maze using a backtracking algorithm
 #Then randomly populate walls and maze
@@ -231,11 +231,16 @@ for i in sprites_to_load:
 icons = {"SpeedSyringe": pygame.image.load("Assets/Syringe.png").convert_alpha(),"HeavyPlating": pygame.image.load("Assets/HeavyPlating.png").convert_alpha(),
          "SpikeyBand": pygame.image.load("Assets/SpikeyBand.png").convert_alpha(),"FireShard": pygame.image.load("Assets/FireShard.png").convert_alpha(),
          "IceShard": pygame.image.load("Assets/IceShard.png").convert_alpha(),"EarthShard": pygame.image.load("Assets/EarthShard.png").convert_alpha(),
-         "HPUP": pygame.image.load("Assets/Sprite.png").convert_alpha(),"Battery": pygame.image.load("Assets/Battery.png").convert_alpha(),}
+         "HPUP": pygame.image.load("Assets/Sprite.png").convert_alpha(),"Battery": pygame.image.load("Assets/Battery.png").convert_alpha(),
+         "OmniShard": pygame.image.load("Assets/OmniShard.png"),"FireOrb": pygame.image.load("Assets/FireOrb.png").convert_alpha(),
+         "IceOrb": pygame.image.load("Assets/IceOrb.png").convert_alpha(),"EarthOrb": pygame.image.load("Assets/EarthOrb.png").convert_alpha(),
+         "GlassCanon": pygame.image.load("Assets/GlassCanon.png")}
 
 
 #Load relic objects
 relics = load_relics()
+super_relics = load_super_relics()
+
 randomRelics = []#will be used to store 3 randomised relics for the battle won screen
 
 
@@ -957,11 +962,15 @@ def check_battle_end():
         #End battle and go to battle won menu
         game_state.set_value("Battle-Won")
 
+        if floor % 2:
+            relicListForUse = relics
+        else:
+            relicListForUse = super_relics
+
         #Choose 3 Random Relics
-        # randomRelics = [random.choice(relics),random.choice(relics),random.choice(relics)]
         randomRelics = []
         for _ in range(3):
-            randomRelics.append(random.choice(relics))
+            randomRelics.append(random.choice(relicListForUse))
         draw_screen()
 
         tick_timers["Battle"] = 0 #reset battle timer used for animation
@@ -1414,16 +1423,16 @@ def main():
                 if event.type == pygame.KEYDOWN:
                     pygame.mixer.Channel(1).play(sounds["Menu"])        
 
-                    if event.key in (pygame.K_ESCAPE, pygame.K_BACKSPACE, pygame.K_SPACE, pygame.K_RETURN):
-                        #Selected Relic
-
-                        game_state.set_value("Moving")
-                        draw_screen()
-                        pygame.display.flip()
+                    if event.key in (pygame.K_ESCAPE, pygame.K_BACKSPACE, pygame.K_SPACE, pygame.K_RETURN): #Selected Relic
+                        
 
                         #Give selected relic to player
                         player_stats.relics.append(randomRelics[menu_selected["Battle-Won"]].name)
                         relic_apply_stat_change(player_stats, randomRelics[menu_selected["Battle-Won"]])
+
+                        game_state.set_value("Moving")
+                        draw_screen()
+                        pygame.display.flip()
 
                         break
                     if event.key == pygame.K_w or event.key == pygame.K_UP:
