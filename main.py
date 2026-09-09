@@ -943,6 +943,14 @@ def draw_enemy_stats():
     draw_text(screen,f"{str(enemy_obj.hp)}/{str(enemy_obj.max_hp)}","#FFFFFF",640,166,0,centre=True)
     
 
+#Draw the game over screen UI
+def draw_game_over():
+    screen.fill("#000000")
+    draw_text(screen,"Game Over","#FF0000",640,100,fontSize=72,centre=True)
+    draw_text(screen,f"You got to floor {floor}","#FFFFFF",640,300,fontSize=48,centre=True)
+    draw_text(screen,"Press any key to start a new run","#FFFFFF",640,640,fontSize=48,centre=True)
+
+
 #If player or enemy health goes over their max HP sets back down to max HP
 def check_over_max_hp():
     if player_stats.hp > player_stats.max_hp:
@@ -956,8 +964,11 @@ def check_over_max_hp():
 def check_battle_end():
     global randomRelics
 
-    if player_stats.hp <= 0:
-        pass#player lose
+    if player_stats.hp <= 0: #player lose
+        battleAnimation().transitionAnim(screen)
+        game_state.set_value("GameOver")
+        draw_game_over()
+
     if enemy_obj.hp <= 0:
         #End battle and go to battle won menu
         game_state.set_value("Battle-Won")
@@ -974,6 +985,24 @@ def check_battle_end():
         draw_screen()
 
         tick_timers["Battle"] = 0 #reset battle timer used for animation
+
+
+#Resets world and variables to be at the start of the new run
+def resetGame():
+    global player_stats,player_pos,player_angle,map,floor,game_state
+
+    map = [[tile("Wall",wall_image=wall_image("Brick.png")),tile("Wall",wall_image=wall_image("Brick.png")),tile("Wall",wall_image=wall_image("Brick.png")),tile("Wall",wall_image=wall_image("Brick.png")),tile("Wall",wall_image=wall_image("Brick.png"))],
+           [tile("Wall",wall_image=wall_image("Brick.png")),tile("Path"),tile("Sprite",spriteInfo="Door"),tile("Path"),tile("Wall",wall_image=wall_image("Brick.png"))],
+           [tile("Wall",wall_image=wall_image("Brick.png")),tile("Path"),tile("Path"),tile("Path"),tile("Wall",wall_image=wall_image("Brick.png"))],
+           [tile("Wall",wall_image=wall_image("Brick.png")),tile("Path"),tile("Path"),tile("Path"),tile("Wall",wall_image=wall_image("Brick.png"))],
+           [tile("Wall",wall_image=wall_image("Brick.png")),tile("Path"),tile("Path"),tile("Path"),tile("Wall",wall_image=wall_image("Brick.png"))],
+           [tile("Wall",wall_image=wall_image("Brick.png")),tile("Wall",wall_image=wall_image("Brick.png")),tile("Wall",wall_image=wall_image("Brick.png")),tile("Wall",wall_image=wall_image("Brick.png")),tile("Wall",wall_image=wall_image("Brick.png"))]]
+
+    floor = 0
+    player_stats = player_battle_container()
+    player_pos = [2.5,4.5]
+    player_angle = 0
+    game_state.set_value("Moving")
 
 
 #Create animations to be played inside battle ie attack animations
@@ -1038,6 +1067,9 @@ class battleAnimation():
 #main function
 def main():
     global player_angle, brick, turnOrder, playerTurn, displayInfo, enemy_obj,turnCounter
+
+    #Reset everything at the start of the game so it is ready for play
+    resetGame()
 
     player_angle = 0
     turnOrder = calculate_turn_order(player_stats,enemy_obj)
@@ -1528,6 +1560,13 @@ def main():
                         pygame.mixer.Channel(1).play(sounds["Menu"])        
                     game_state.set_value("Moving")
                     
+        elif game_state.value == "GameOver":
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    running = False
+                elif event.type == pygame.KEYDOWN:
+                    resetGame()
+            draw_game_over()
 
 
                         
