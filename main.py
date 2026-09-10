@@ -235,10 +235,14 @@ for i in sprites_to_load:
 icons = {"SpeedSyringe": pygame.image.load("Assets/Syringe.png").convert_alpha(),"HeavyPlating": pygame.image.load("Assets/HeavyPlating.png").convert_alpha(),
          "SpikeyBand": pygame.image.load("Assets/SpikeyBand.png").convert_alpha(),"FireShard": pygame.image.load("Assets/FireShard.png").convert_alpha(),
          "IceShard": pygame.image.load("Assets/IceShard.png").convert_alpha(),"EarthShard": pygame.image.load("Assets/EarthShard.png").convert_alpha(),
-         "HPUP": pygame.image.load("Assets/Sprite.png").convert_alpha(),"Battery": pygame.image.load("Assets/Battery.png").convert_alpha(),
+         "HeartContainer": pygame.image.load("Assets/heartContainer.png").convert_alpha(),"Battery": pygame.image.load("Assets/Battery.png").convert_alpha(),
          "OmniShard": pygame.image.load("Assets/OmniShard.png"),"FireOrb": pygame.image.load("Assets/FireOrb.png").convert_alpha(),
          "IceOrb": pygame.image.load("Assets/IceOrb.png").convert_alpha(),"EarthOrb": pygame.image.load("Assets/EarthOrb.png").convert_alpha(),
-         "GlassCanon": pygame.image.load("Assets/GlassCanon.png")}
+         "GlassCanon": pygame.image.load("Assets/GlassCanon.png"),}
+
+#UI images
+uiImages = {"greenCorner":pygame.image.load("Assets/GreenCorner.png").convert_alpha(),"yellowCorner":pygame.image.load("Assets/YellowCorner.png").convert_alpha(),
+            "start":pygame.image.load("Assets/startScreensaver.png").convert_alpha()}
 
 
 #Load relic objects
@@ -992,8 +996,19 @@ def draw_pause():
     draw_text(screen,"Quit",optionColours[4],640,575,fontSize=48,centre=True)
 
 
+#Maze motif for UI
+def draw_maze_corners(surface,cornerImg="greenCorner",scale=1):
+    cornerImg=pygame.transform.scale_by(uiImages[cornerImg],scale)
+    surface.blit(cornerImg,(0,0))
+    surface.blit(pygame.transform.rotate(cornerImg,90),(0,720-scale*128))
+    surface.blit(pygame.transform.rotate(cornerImg,180),(1280-scale*128,720-scale*128))
+    surface.blit(pygame.transform.rotate(cornerImg,270),((1280-scale*128,0)))
+
+
 def draw_controls():
     screen.fill("#33AA33")
+
+    draw_maze_corners(screen)
 
     draw_text(screen,"Controls","#d4e650",640,128,fontSize=64,centre=True)
 
@@ -1007,20 +1022,20 @@ def draw_controls():
 
 
 
-
-
 def draw_start_screen():
     screen.fill("#33AA33")
 
-    draw_text(screen,"TITLE OF THE GAME","#d4e650",640,128,fontSize=64,centre=True)
+    screen.blit(uiImages["start"],(0,0))
+    
+    draw_text(screen,"RINTH","#d4e650",256,70,fontSize=100,centre=True)
 
     startOptionColours = ["#d4e650","#d4e650","#d4e650","#d4e650","#d4e650"]
     startOptionColours[menu_selected["Start"]] = "#FF0000"
 
-    draw_text(screen,"Start",startOptionColours[0],640,200,fontSize=48,centre=True)
-    draw_text(screen,"Controls",startOptionColours[1],640,250,fontSize=48,centre=True)
-    draw_text(screen,"Settings",startOptionColours[2],640,300,fontSize=48,centre=True)
-    draw_text(screen,"Quit",startOptionColours[3],640,350,fontSize=48,centre=True)
+    draw_text(screen,"Start",startOptionColours[0],256,200,fontSize=48,centre=True)
+    draw_text(screen,"Controls",startOptionColours[1],256,250,fontSize=48,centre=True)
+    draw_text(screen,"Settings",startOptionColours[2],256,300,fontSize=48,centre=True)
+    draw_text(screen,"Quit",startOptionColours[3],256,350,fontSize=48,centre=True)
 
 
 
@@ -1028,6 +1043,8 @@ def draw_start_screen():
 #draw the settings menu
 def draw_settings():
     screen.fill("#3ec54b")
+
+    draw_maze_corners(screen)
 
     draw_text(screen,"Settings","#d4e650",640,128,fontSize=64,centre=True)
 
@@ -1049,6 +1066,9 @@ def draw_settings():
 #Victory displyed after the final boss (Robot King)
 def draw_victory():
     screen.fill("#FF5E00")
+
+    draw_maze_corners(screen,"yellowCorner",1.5)
+
     draw_text(screen,"VICTORY","#FFFF00",640,128,fontSize=64,centre=True)
 
     draw_text(screen,"You've managed the impossible and relieved the realm from the corrupt grasp of the Robot King","#FFFF00",640,240,fontSize=32,centre=True)
@@ -1751,11 +1771,25 @@ def main():
                 if event.type == pygame.QUIT:
                     running = False
                 if event.type == pygame.KEYDOWN:
-                    if event.key == pygame.K_SPACE:
-                        resetGame()
-                        game_state.set_value("Moving")
-                        draw_screen()
+                    
+                    if event.key == pygame.K_w or event.key == pygame.K_UP:
+                        menu_selected["Start"] = (menu_selected["Start"]-1)%4#cycle up, %4 to go back to the bottom
+                    if event.key == pygame.K_s or event.key == pygame.K_DOWN:
+                        menu_selected["Start"] = (menu_selected["Start"]+1)%4 #cycle down, %4 to go back to the top
 
+                    if event.key == pygame.K_SPACE:
+                        if menu_selected["Start"]==0:
+                            resetGame()
+                            game_state.set_value("Moving")
+                            draw_screen()
+                        elif menu_selected["Start"]==1:
+                            game_state.set_value("Controls")
+                            menu_selected["Controls"]="Start"
+                        elif menu_selected["Start"]==2:
+                            game_state.set_value("Settings")
+                            menu_selected["Settings-Back"]="Start"
+                        elif menu_selected["Start"]==3:
+                            running=False
             
             pygame.display.flip()
 
@@ -1809,6 +1843,9 @@ def main():
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     running = False
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_ESCAPE:
+                        game_state.set_value("Start")
             draw_victory()            
             pygame.display.flip()
 

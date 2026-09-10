@@ -172,7 +172,7 @@ def load_relics():
     relicTempList.append(relic("Fire Shard","This will imporve your ability to use fire","(Increases fire affinity by 10%)","FireShard","fireAffinity",multVal=1.1))
     relicTempList.append(relic("Ice Shard","This will imporve your ability to use ice","(Increases ice affinity by 10%)","IceShard","iceAffinity",multVal=1.1))
     relicTempList.append(relic("Earth Shard","This will imporve your ability to use earth","(Increases earth affinity by 10%)","EarthShard","EarthAffinity",multVal=1.1))
-    relicTempList.append(relic("HP","This will increase your HP","(+10 HP)","HPUP","HP",addVal=10))
+    relicTempList.append(relic("Heart Container","This will increase your HP","(+10 HP)","HeartContainer","HP",addVal=10))
     relicTempList.append(relic("Battery","This will increase your energy capacity","(+5 EP)","Battery","EP",addVal=5))
 
     return relicTempList
@@ -231,7 +231,7 @@ def relic_apply_stat_change(playerObject: battle_container,relicObject: relic):
         playerObject.earthDefence = (playerObject.earthDefence + relicObject.addVal) * relicObject.multVal
     elif stat == "glassCanon":
         playerObject.speed = playerObject.speed * relicObject.multVal
-        playerObject.attack = playerObject.attack * relicObject.multVal
+        playerObject.physicalStrength = playerObject.physicalStrength * relicObject.multVal
         playerObject.defence = playerObject.defence / relicObject.multVal
 
 
