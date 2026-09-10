@@ -22,7 +22,7 @@ boss_sets = {1:["KingFireSlime","KingIceSlime","KingEarthSlime"],
              3:["KingBot"]}
 
 player_pos = [2.5,10.5]#The coordinate of the player, (xy)
-floor = 1 #Counter to track which floor the player is on
+floor = 0 #Counter to track which floor the player is on
 
 #Use function from maze.py to generate a new maze using a backtracking algorithm
 #Then randomly populate walls and maze
@@ -123,8 +123,12 @@ pygame.mixer.init()   #Set up sound
 sounds = {"BGM" : pygame.mixer.Sound("Assets/BGM.mp3"), "Fail": pygame.mixer.Sound("Assets/Fail.mp3"),
           "Menu": pygame.mixer.Sound("Assets/Menu.mp3"),"Attack": pygame.mixer.Sound("Assets/Attack.mp3")}
 
+
+volume = {"Music":0.5,"SFX":0.5}
 # print(pygame.mixer.music.get_volume())
-pygame.mixer.Channel(0).set_volume(0.5)
+pygame.mixer.Channel(0).set_volume(volume["Music"])
+pygame.mixer.Channel(1).set_volume(volume["SFX"])
+
 
 pygame.mixer.Channel(0).play(sounds["BGM"], loops = -1)#Start music and loop it infinitely
 # pygame.mixer.Channel(1).play(sounds["Fail"])
@@ -259,11 +263,24 @@ pygame.image.save(screen, "Assets/saveBackground.png")
 
 #uses ticks/count timers, +1 per loop for time tracking for animations etc.
 tick_timers = {"Battle":0}
-#Other misc counters and trackers
-menu_selected = {"Battle":0, "Battle-Energy":0,"Battle-Item":0,"Battle-Won":0,"MoveUp":0,"PopUp":""}
-playerTurn = True
-turnCounter = {"Player":0,"Enemy":0}
-displayInfo = False 
+
+#Counters and trackers for menu, mostly for what is selected in the menu
+#All menus with a 0 store the index selected for said menu.
+#Pop up stores the item/relic obtained
+#Controls and settings-Back stores the menu the menu was selected from
+menu_selected = {"Battle":0, "Battle-Energy":0,"Battle-Item":0,"Battle-Won":0,
+                 "MoveUp":0,"PopUp":"","Pause":0,"Controls":"Start","Settings-Back":"Start",
+                 "Settings-Index":0,"Start":0}
+
+playerTurn = True#bool to decide if it is the player to move or the enemy
+turnCounter = {"Player":0,"Enemy":0} #For tracking speed and turn order
+displayInfo = False #will the inventory be displayed when roaming
+
+#Stores setting name as key and the value is a list with all the options with the final index storing which value in the list is selected
+settings = {"Performance":["Potato","Lightweight","Computer indeed","Heavyweight",2],
+            "AnimationSpeed":["Snail","Slow","Medium","Fast","Very Fast",4],
+            "Music":[0,10,20,30,40,50,60,70,80,90,100,5],
+            "SFX":[0,10,20,30,40,50,60,70,80,90,100,5]}
 
 #Object for sprites, tracking info about them
 class sprite_obj():
@@ -951,6 +968,102 @@ def draw_game_over():
     draw_text(screen,"Press any key to start a new run","#FFFFFF",640,640,fontSize=48,centre=True)
 
 
+#Draw the pause menu UI
+def draw_pause():
+     ##Taken from draw_battle_won()
+    translucentSurface = pygame.Surface((1280,720), pygame.SRCALPHA) #This is a surface that can be drawn on with opacities so I can have a blurry background
+    pygame.draw.rect(translucentSurface,(16, 7, 54, 128),pygame.Rect(0,0,1280,720))#draws the a translucent rectangle onto the new surface, 4th element in colour array is opacity
+    screen.blit(pygame.image.load("Assets/saveBackground.png"),(0,0))#puts the saved image on the back for something to draw onto and as a backdrop
+    screen.blit(translucentSurface, (0,0))    #draw the new surface with the blurry stuff
+
+    #main box
+    pygame.draw.rect(screen, (16, 7, 54),pygame.Rect(320,0,640,5720),border_radius=10)
+    ####
+
+    draw_text(screen,"Pause","#FFFFFF",640,128,fontSize=64,centre=True)
+
+    optionColours = ["#FFFFFF"]*5
+    optionColours[menu_selected["Pause"]]="#FF0000"
+
+    draw_text(screen,"Resume",optionColours[0],640,275,fontSize=48,centre=True)
+    draw_text(screen,"Controls",optionColours[1],640,350,fontSize=48,centre=True)
+    draw_text(screen,"Settings",optionColours[2],640,425,fontSize=48,centre=True)
+    draw_text(screen,"Main Menu",optionColours[3],640,500,fontSize=48,centre=True)
+    draw_text(screen,"Quit",optionColours[4],640,575,fontSize=48,centre=True)
+
+
+def draw_controls():
+    screen.fill("#33AA33")
+
+    draw_text(screen,"Controls","#d4e650",640,128,fontSize=64,centre=True)
+
+    draw_text(screen, "Movement/Menu Selection: WASD or Arrow Keys","#d4e650",640,200,fontSize=48,centre=True)
+    draw_text(screen, "Select: Space","#d4e650",640,260,fontSize=48,centre=True)
+    draw_text(screen, "Go Back a menu: Escape","#d4e650",640,320,fontSize=48,centre=True)
+    draw_text(screen, "Check inventory when moving: I or O","#d4e650",640,380,fontSize=48,centre=True)
+
+    draw_text(screen, "Press Escape to Return","#d4e650",640,600,fontSize=48,centre=True)
+
+
+
+
+
+
+def draw_start_screen():
+    screen.fill("#33AA33")
+
+    draw_text(screen,"TITLE OF THE GAME","#d4e650",640,128,fontSize=64,centre=True)
+
+    startOptionColours = ["#d4e650","#d4e650","#d4e650","#d4e650","#d4e650"]
+    startOptionColours[menu_selected["Start"]] = "#FF0000"
+
+    draw_text(screen,"Start",startOptionColours[0],640,200,fontSize=48,centre=True)
+    draw_text(screen,"Controls",startOptionColours[1],640,250,fontSize=48,centre=True)
+    draw_text(screen,"Settings",startOptionColours[2],640,300,fontSize=48,centre=True)
+    draw_text(screen,"Quit",startOptionColours[3],640,350,fontSize=48,centre=True)
+
+
+
+
+#draw the settings menu
+def draw_settings():
+    screen.fill("#3ec54b")
+
+    draw_text(screen,"Settings","#d4e650",640,128,fontSize=64,centre=True)
+
+    settingsOptionColours = ["#d4e650","#d4e650","#d4e650","#d4e650"] #So the selected option is highlighted
+    settingsOptionColours[menu_selected["Settings-Index"]] = "#FF0000"
+
+    draw_text(screen, "Performance",settingsOptionColours[0],320,260,fontSize=48)
+    draw_text(screen, "Animation Speed",settingsOptionColours[1],320,320,fontSize=48)
+    draw_text(screen, "Music Volume",settingsOptionColours[2],320,380,fontSize=48)
+    draw_text(screen, "SFX Volume",settingsOptionColours[3],320,440,fontSize=48)
+
+    #Setting option selected
+    draw_text(screen,settings["Performance"][settings["Performance"][-1]],settingsOptionColours[0],720,260,fontSize=48)
+    draw_text(screen,settings["AnimationSpeed"][settings["AnimationSpeed"][-1]],settingsOptionColours[1],720,320,fontSize=48)
+    draw_text(screen,str(settings["Music"][settings["Music"][-1]]),settingsOptionColours[2],720,380,fontSize=48)
+    draw_text(screen,str(settings["SFX"][settings["SFX"][-1]]),settingsOptionColours[3],720,440,fontSize=48)
+
+
+#Victory displyed after the final boss (Robot King)
+def draw_victory():
+    screen.fill("#FF5E00")
+    draw_text(screen,"VICTORY","#FFFF00",640,128,fontSize=64,centre=True)
+
+    draw_text(screen,"You've managed the impossible and relieved the realm from the corrupt grasp of the Robot King","#FFFF00",640,240,fontSize=32,centre=True)
+
+    draw_text(screen,"Thank You for playing!","#FFFF00",640,300,fontSize=48,centre=True)
+
+    draw_text(screen,"Made by","#FFFF00",640,420,fontSize=48,centre=True)
+    draw_text(screen,"Hbear10","#FFFF00",640,460,fontSize=32,centre=True)
+    draw_text(screen,"Follow my stuff at","#FFFF00",640,500,fontSize=48,centre=True)
+    draw_text(screen,"github.com/hbear10","#FFFF00",640,540,fontSize=32,centre=True)
+    
+
+
+
+
 #If player or enemy health goes over their max HP sets back down to max HP
 def check_over_max_hp():
     if player_stats.hp > player_stats.max_hp:
@@ -1003,6 +1116,24 @@ def resetGame():
     player_pos = [2.5,4.5]
     player_angle = 0
     game_state.set_value("Moving")
+
+
+
+def applySettings():
+    global raycast_column_width, battleAnimTime
+
+    raycast_column_width = 2**(3-settings["Performance"][-1])#Change the width of how wide each ray for raycasting shoud be
+    # print(raycast_column_width)
+
+    battleAnimTime = 50 -10*settings["AnimationSpeed"][-1] #Set the anim time to the settingsettings["AnimationSpeed"]
+    # print(battleAnimTime)
+
+    #calculate volumes from settings
+    volume = {"Music":settings["Music"][ settings["Music"][-1]]/100,"SFX":settings["SFX"][ settings["SFX"][-1]]/100}
+    # print(pygame.mixer.music.get_volume())
+    pygame.mixer.Channel(0).set_volume(volume["Music"])
+    pygame.mixer.Channel(1).set_volume(volume["SFX"])
+
 
 
 #Create animations to be played inside battle ie attack animations
@@ -1070,6 +1201,10 @@ def main():
 
     #Reset everything at the start of the game so it is ready for play
     resetGame()
+    game_state.set_value("Start")
+
+    #Apply settings
+    applySettings()
 
     player_angle = 0
     turnOrder = calculate_turn_order(player_stats,enemy_obj)
@@ -1092,6 +1227,10 @@ def main():
                         displayInfo = not displayInfo #flip variable
                         # a.enemyMoveAnim(screen)
                         draw_screen()
+                    if event.key == pygame.K_ESCAPE:
+                        pygame.image.save(screen, "Assets/saveBackground.png")
+                        game_state.set_value("Pause")
+                        
 
             ##Movement##
             if keys[pygame.K_w] or keys[pygame.K_UP]:
@@ -1568,8 +1707,112 @@ def main():
                     resetGame()
             draw_game_over()
 
+        elif game_state.value == "Pause":
+            draw_pause()
 
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    running = False
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_w or event.key == pygame.K_UP:
+                        menu_selected["Pause"] = (menu_selected["Pause"]-1)%5#cycle up, %5 to go back to the bottom
+                    if event.key == pygame.K_s or event.key == pygame.K_DOWN:
+                        menu_selected["Pause"] = (menu_selected["Pause"]+1)%5 #cycle down, %5 to go back to the top
+                    if event.key == pygame.K_SPACE or event.key == pygame.K_RETURN:
+                        if menu_selected["Pause"] == 0:#Resume
+                            game_state.set_value("Moving")
+                            draw_screen()
+
+                        elif menu_selected["Pause"] == 1:#Controls
+                            game_state.set_value("Controls")
+                            menu_selected["Controls"] = "Pause"
+
+                        elif menu_selected["Pause"] == 2:#Settings
+                            game_state.set_value("Settings")
+                            menu_selected["Settings-Back"] = "Pause"
+
+                        elif menu_selected["Pause"] == 3:#Main Menu
+                            game_state.set_value("Start")
+
+                        elif menu_selected["Pause"] == 4:#Quit
+                            running = False
+
+                    if event.key == pygame.K_ESCAPE:
+                        game_state.set_value("Moving")
+                        draw_screen()
+
+            
+            pygame.display.flip()
+
+        elif game_state.value == "Start":
+            draw_start_screen()
+
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    running = False
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_SPACE:
+                        resetGame()
+                        game_state.set_value("Moving")
+                        draw_screen()
+
+            
+            pygame.display.flip()
+
+        elif game_state.value == "Settings":
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    running = False
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_ESCAPE:
+                        game_state.set_value(menu_selected["Settings-Back"])
+                        applySettings()
+
+                    if event.key == pygame.K_w or event.key == pygame.K_UP:
+                        menu_selected["Settings-Index"] = (menu_selected["Settings-Index"]-1)%4#cycle up, %4 to go back to the bottom
+                    if event.key == pygame.K_s or event.key == pygame.K_DOWN:
+                        menu_selected["Settings-Index"] = (menu_selected["Settings-Index"]+1)%4 #cycle down, %4 to go back to the top
+
+                    if event.key == pygame.K_a or event.key == pygame.K_LEFT:
+                        settingValues = ["Performance","AnimationSpeed","Music","SFX"]
+                        settingTempIndex = settings[settingValues[menu_selected["Settings-Index"]]][-1]
+                        print(settingTempIndex)
+                        settingTempIndex -= 1
+                        if settingTempIndex == -1:
+                            settingTempIndex = len(settings[settingValues[menu_selected["Settings-Index"]]])-2
+                        settings[settingValues[menu_selected["Settings-Index"]]][-1] = settingTempIndex
+
+                    if event.key == pygame.K_d or event.key == pygame.K_RIGHT:
+                        settingValues = ["Performance","AnimationSpeed","Music","SFX"]
+                        settingTempIndex = settings[settingValues[menu_selected["Settings-Index"]]][-1]
+                        print(settingTempIndex)
+                        settingTempIndex += 1
+                        if settingTempIndex == len(settings[settingValues[menu_selected["Settings-Index"]]])-1:
+                            settingTempIndex = 0
+                        settings[settingValues[menu_selected["Settings-Index"]]][-1] = settingTempIndex
+
+            draw_settings()
+            pygame.display.flip()
+
+        elif game_state.value == "Controls":
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    running = False
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_ESCAPE:
+                        game_state.set_value(menu_selected["Controls"])
+
+                draw_controls()
+                pygame.display.flip()
                         
+        elif game_state.value == "Victory":
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    running = False
+            draw_victory()            
+            pygame.display.flip()
+
+                      
         clock.tick(FPS)  
 
     pygame.quit() #After leaving mainloop, end the game
