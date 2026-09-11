@@ -984,6 +984,11 @@ def draw_pause():
     pygame.draw.rect(screen, (16, 7, 54),pygame.Rect(320,0,640,5720),border_radius=10)
     ####
 
+    for i in range(len(player_stats.relics)):
+        print(i)
+        screen.blit(pygame.transform.scale_by(icons[player_stats.relics[i].image],4 ),(960+(i%5)*64,(i//5)*64))
+        
+
     draw_text(screen,"Pause","#FFFFFF",640,128,fontSize=64,centre=True)
 
     optionColours = ["#FFFFFF"]*5
@@ -1122,7 +1127,7 @@ def check_battle_end():
 
 #Resets world and variables to be at the start of the new run
 def resetGame():
-    global player_stats,player_pos,player_angle,map,floor,game_state
+    global player_stats,player_pos,player_angle,floor,game_state,map
 
     map = [[tile("Wall",wall_image=wall_image("Brick.png")),tile("Wall",wall_image=wall_image("Brick.png")),tile("Wall",wall_image=wall_image("Brick.png")),tile("Wall",wall_image=wall_image("Brick.png")),tile("Wall",wall_image=wall_image("Brick.png"))],
            [tile("Wall",wall_image=wall_image("Brick.png")),tile("Path"),tile("Sprite",spriteInfo="Door"),tile("Path"),tile("Wall",wall_image=wall_image("Brick.png"))],
@@ -1133,9 +1138,17 @@ def resetGame():
 
     floor = 0
     player_stats = player_battle_container()
+    tempMoves = load_energy_moves()
+    player_stats.set_energyMoves(tempMoves[0],tempMoves[1],tempMoves[2],tempMoves[3])
+    player_stats.relics=[]
+
     player_pos = [2.5,4.5]
     player_angle = 0
     game_state.set_value("Moving")
+
+    #test for victory screen
+    # player_stats.physicalStrength = 10000
+    # floor = 5
 
 
 
@@ -1286,10 +1299,13 @@ def main():
 
             #Run into door and generate new maze
             if map[int(player_pos[1])][int(player_pos[0])].spriteInfo=="Door":
-                new_maze(wall_tiles=maze_wallsets[floor//2+1], number_of_enemies=10, enemies=maze_enemyset[floor//2+1],
-                         number_of_campfires=2, number_of_chargers=1, number_of_moveUP=1, number_of_items=4, number_of_chests=2)
-                battleAnimation(length=20,).transitionAnim(screen)
-                draw_screen()
+                if floor < 6:
+                    new_maze(wall_tiles=maze_wallsets[floor//2+1], number_of_enemies=10, enemies=maze_enemyset[floor//2+1],
+                                number_of_campfires=2, number_of_chargers=1, number_of_moveUP=1, number_of_items=4, number_of_chests=2)
+                    battleAnimation(length=20,).transitionAnim(screen)
+                    draw_screen()
+                else:
+                    game_state.set_value("Victory")
 
 
             elif map[int(player_pos[1])][int(player_pos[0])].spriteInfo=="Campfire":
@@ -1348,7 +1364,7 @@ def main():
                     randRelic = random.choice(relics)
                     menu_selected["PopUp"] = f"Relic: {randRelic.name}"
 
-                    player_stats.relics.append(randRelic.name)
+                    player_stats.relics.append(randRelic)
                     relic_apply_stat_change(player_stats, randRelic)
                     
 
@@ -1618,7 +1634,7 @@ def main():
                         
 
                         #Give selected relic to player
-                        player_stats.relics.append(randomRelics[menu_selected["Battle-Won"]].name)
+                        player_stats.relics.append(randomRelics[menu_selected["Battle-Won"]])
                         relic_apply_stat_change(player_stats, randomRelics[menu_selected["Battle-Won"]])
 
                         game_state.set_value("Moving")
